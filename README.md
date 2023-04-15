@@ -1,2 +1,1 @@
-# MenonDemosaicing
- Implementation of Demosaicing algorithm
+Implementation of Demosaicing algorithm proposed by Daniele Menon and Stefano Andriani in the article [Demosaicing With Directional Filtering and a posteriori Decision](http://elynxsdk.free.fr/ext-docs/Demosaicing/todo/Menon_Andriani_IEEE_T_IP_2007.pdf)

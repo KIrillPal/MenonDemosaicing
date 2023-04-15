@@ -1,3 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-add_executable (MenonDemosaicing "MenonDemosaicing.cpp" "MenonDemosaicing.hpp")
+set(REPOSITORY https://github.com/KIrillPal/MenonDemosaicing.git)
+set(SRC "src")
+
+add_executable (MenonDemosaicing ${SRC}/main.cpp)
