@@ -1,3 +1,7 @@
 # Remove VS project data
 .vs
 CMakeSettings.json
+# Remove Idea project data
+.idea
+# Remove build files
+cmake-build-debug
