@@ -1,29 +1,48 @@
 #include <iostream>
-#include "io/TinyTIFF/src/tinytiffreader.h"
-#include "io/TinyTIFF/src/tinytiffreader.hxx"
+#include "io/format/tiff.hpp"
 
-int main() {
-	TinyTIFFReaderFile* tiffr = NULL;
-	tiffr = TinyTIFFReader_open("sample.tiff");
-	if (!tiffr) {
-		std::cout << "    ERROR reading (not existent, not accessible or no TIFF file)\n";
-	}
-	else {
-		const uint32_t width = TinyTIFFReader_getWidth(tiffr);
-		const uint32_t height = TinyTIFFReader_getHeight(tiffr);
-		const uint16_t bitspersample = TinyTIFFReader_getBitsPerSample(tiffr, 0);
-		uint8_t* image = (uint8_t*)calloc(width * height, bitspersample / 8);
-		TinyTIFFReader_getSampleData(tiffr, image, 0);
+void Abort(int code = 0) {
+    std::cout << "ABORTING\n";
+    exit(code);
+}
 
-		printf("BitsPerSample: %hu\n", bitspersample);
-        for (size_t x = 0; x < height; ++x) {
-            for (size_t y = 0; y < width; ++y) {
-                printf("%hhx ", image[x * width + y]);
-            }
-            printf("\n");
-        }
+void PrintHelpUsage() {
+    std::cout << "Usage: menon <file .tiff>\n\n";
+}
 
-		free(image);
-	}
-	TinyTIFFReader_close(tiffr);
+ SharedBitmap ReadImage(const char* file_path) {
+    try {
+        return io::ReadBitmapFromTIFF(file_path);
+    }
+    catch (const std::exception& e) {
+        std::cout << "Reading failed: " << e.what() << '\n';
+        Abort();
+    }
+}
+
+void GetPixelQuery(const SharedBitmap& bmp) {
+    size_t x = 0, y = 0;
+    std::cin >> y >> x;
+
+    uint64_t abs_level = bmp.Get(x, y);
+    uint64_t abs_white = 0xFFFF;
+    uint64_t abs_scale = 0xFF;
+
+    float level = static_cast<float>(abs_level) / (abs_white / abs_scale);
+    std::cout << "Light level " << level << '\n';
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        PrintHelpUsage();
+        return 0;
+    }
+    auto image = ReadImage(argv[1]);
+    std::cout << "Image size: " << image.Width() << " x " << image.Height() << '\n';
+    std::cout << "Bytes per pixel: " << image.BytesPerPixel() << '\n';
+
+    while (true) {
+        GetPixelQuery(image);
+    }
+    return 0;
 }

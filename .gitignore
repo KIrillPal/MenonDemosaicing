@@ -5,3 +5,5 @@ CMakeSettings.json
 .idea
 # Remove build files
 cmake-build-debug
+# Output file
+menon
