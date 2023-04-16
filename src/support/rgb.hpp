@@ -11,21 +11,21 @@ public:
         b_(height, width, bytes_per_pixel) {
     }
 
-    ImageRGB(SharedBitmap R, SharedBitmap B, SharedBitmap G)
+    ImageRGB(Bitmap R, Bitmap B, Bitmap G)
             : r_{std::move(R)}, g_{std::move(G)}, b_{std::move(B)} {
     }
 
     // Trivially copyable and movable
 
-    SharedBitmap::LARGEST_TYPE R(size_t x, size_t y) const {
+    Bitmap::LARGEST_TYPE R(size_t x, size_t y) const {
         return r_.Get(x, y);
     }
-    SharedBitmap::LARGEST_TYPE G(size_t x, size_t y) const {
+    Bitmap::LARGEST_TYPE G(size_t x, size_t y) const {
         return g_.Get(x, y);
     }
-    SharedBitmap::LARGEST_TYPE B(size_t x, size_t y) const {
+    Bitmap::LARGEST_TYPE B(size_t x, size_t y) const {
         return b_.Get(x, y);
     }
 private:
-    SharedBitmap r_, g_, b_;
+    Bitmap r_, g_, b_;
 };

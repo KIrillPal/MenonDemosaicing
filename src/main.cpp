@@ -1,5 +1,6 @@
 #include <iostream>
 #include "io/format/tiff.hpp"
+#include "interpolation/directional.hpp"
 
 void Abort(int code = 0) {
     std::cout << "ABORTING\n";
@@ -18,6 +19,7 @@ void PrintHelpUsage() {
         std::cout << "Reading failed: " << e.what() << '\n';
         Abort();
     }
+    return Bitmap{};
 }
 
 void GetPixelQuery(const Bitmap& bmp) {
@@ -41,8 +43,14 @@ int main(int argc, char* argv[]) {
     std::cout << "Image size: " << image.Width() << " x " << image.Height() << '\n';
     std::cout << "Bytes per pixel: " << image.BytesPerPixel() << '\n';
 
-    while (true) {
-        GetPixelQuery(image);
+
+    auto green_vh = menon::InterpolateVHInParallel(image);
+
+    std::cout << "Computations are finished\n" << '\n';
+
+    while(true) {
+        GetPixelQuery(green_vh.V);
     }
+
     return 0;
 }

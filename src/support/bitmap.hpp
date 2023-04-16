@@ -17,12 +17,14 @@ public:
     static constexpr size_t DATA_SAFE_OFFSET = sizeof(uint64_t);
 //////////////////////////////////////////////////////////////////////////////////
 
+    Bitmap() = default;
+
     Bitmap(size_t height, size_t width, uint16_t bytes_per_pixel)
             : h_{height},
               w_{width},
               p_{bytes_per_pixel},
               data_{new uint8_t[height * width * bytes_per_pixel + DATA_SAFE_OFFSET]},
-              mask_{(1ULL << (p_ << 3)) - 1} {
+              mask_{(1ULL << (bytes_per_pixel << 3)) - 1} {
     }
 
     // Copyable
@@ -30,7 +32,7 @@ public:
       : Bitmap(std::move(other.Copy())) {
     }
     Bitmap& operator =(const Bitmap& other) {
-        *this = std::move(other.Copy());
+        return *this = std::move(other.Copy());;
     }
 
     // Trivially movable
@@ -67,12 +69,24 @@ public:
         return result & mask_;
     }
 
+    // Just reads sizeof(T) bytes from pixel data
+    // The same as Get but faster and unsafe
     template <typename T>
     T Get(size_t x, size_t y) const {
-        return static_cast<T>(Get(x, y));
+        assert(x < h_ && y < w_);          // the same as Get()
+        size_t offset = (x * w_ + y) * p_; // the same as Get()
+        return *reinterpret_cast<T*>(data_.get() + offset);
     }
+
+    template <typename T>
+    void Set(size_t x, size_t y, T value) {
+        assert(x < h_ && y < w_);
+        size_t offset = (x * w_ + y) * p_;
+        *reinterpret_cast<T*>(data_.get() + offset) = value;
+    }
+
 private:
-    std::unique_ptr<uint8_t> data_;
+    std::unique_ptr<uint8_t> data_{nullptr};
     size_t w_{0}; // width
     size_t h_{0}; // height
     size_t p_{0}; // bytes per pixel

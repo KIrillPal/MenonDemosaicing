@@ -17,6 +17,9 @@ add_subdirectory(${SRC}/io/TinyTIFF ./TinyTIFF)
 add_library(readtiff ${SRC}/io/format/tiff.cpp)
 target_link_libraries(readtiff TinyTIFF)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+add_library(interpolate ${SRC}/interpolation/directional.cpp)
+
 add_executable (menon ${SRC}/main.cpp)
-target_link_libraries(menon readtiff)
+target_link_libraries(menon readtiff interpolate)
 set_target_properties(menon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../ )
