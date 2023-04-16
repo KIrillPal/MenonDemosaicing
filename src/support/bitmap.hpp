@@ -3,18 +3,21 @@
 #include <memory>
 #include <cassert>
 #include <cstring>
+#include <vector>
 
 // Class of pixel array with only one channel
-// Its purpose to share one bitmap between several threads
-// Trivially copyable and movable
-class SharedBitmap {
+// Copyable
+// Trivially movable
+class Bitmap {
+public:
     // Type of the maximum sample(pixel) size.
     // Used in 'Get' function to make it able to return code of each size.
     using LARGEST_TYPE = uint64_t;
     // Offset to let us read entire LARGEST_TYPE variable even at the last pixel
     static constexpr size_t DATA_SAFE_OFFSET = sizeof(uint64_t);
-public:
-    SharedBitmap(size_t height, size_t width, uint16_t bytes_per_pixel)
+//////////////////////////////////////////////////////////////////////////////////
+
+    Bitmap(size_t height, size_t width, uint16_t bytes_per_pixel)
             : h_{height},
               w_{width},
               p_{bytes_per_pixel},
@@ -22,12 +25,17 @@ public:
               mask_{(1ULL << (p_ << 3)) - 1} {
     }
 
-    // Trivially copyable and movable
-    SharedBitmap(const SharedBitmap&) = default;
-    SharedBitmap& operator =(const SharedBitmap&) = default;
+    // Copyable
+    Bitmap(const Bitmap& other)
+      : Bitmap(std::move(other.Copy())) {
+    }
+    Bitmap& operator =(const Bitmap& other) {
+        *this = std::move(other.Copy());
+    }
 
-    SharedBitmap(SharedBitmap&&) = default;
-    SharedBitmap& operator =(SharedBitmap&&) = default;
+    // Trivially movable
+    Bitmap(Bitmap&&) = default;
+    Bitmap& operator =(Bitmap&&) = default;
 
 
     size_t Width() const {
@@ -41,6 +49,13 @@ public:
     }
     uint8_t* Data() {
         return data_.get();
+    }
+
+    // Copies current bitmap
+    Bitmap Copy() const {
+        Bitmap cp(h_, w_, p_);
+        std::copy(data_.get(), data_.get() + h_*w_*p_, cp.data_.get());
+        return cp;
     }
 
     // Returns the value of pixel (x, y) of Bitmap
@@ -57,7 +72,7 @@ public:
         return static_cast<T>(Get(x, y));
     }
 private:
-    std::shared_ptr<uint8_t> data_;
+    std::unique_ptr<uint8_t> data_;
     size_t w_{0}; // width
     size_t h_{0}; // height
     size_t p_{0}; // bytes per pixel

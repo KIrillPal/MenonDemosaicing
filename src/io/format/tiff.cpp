@@ -5,7 +5,7 @@
 
 namespace io {
 
-    SharedBitmap ReadBitmapFromTIFF(const char *file_path) {
+    Bitmap ReadBitmapFromTIFF(const char *file_path) {
         TinyTIFFReaderFile* tiffr = TinyTIFFReader_open(file_path);
         if (!tiffr) {
             throw std::runtime_error("File not existent or not accessible");
@@ -18,7 +18,7 @@ namespace io {
         // Assert on appropriate size of sample
         assert((bits_per_sample & 7) == 0);
 
-        SharedBitmap bmp(height, width, bits_per_sample >> 3);
+        Bitmap bmp(height, width, bits_per_sample >> 3);
         TinyTIFFReader_getSampleData(tiffr, bmp.Data(), 0);
 
         auto eptr = TinyTIFFReader_getLastError(tiffr);

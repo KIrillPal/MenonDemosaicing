@@ -10,7 +10,7 @@ void PrintHelpUsage() {
     std::cout << "Usage: menon <file .tiff>\n\n";
 }
 
- SharedBitmap ReadImage(const char* file_path) {
+ Bitmap ReadImage(const char* file_path) {
     try {
         return io::ReadBitmapFromTIFF(file_path);
     }
@@ -20,7 +20,7 @@ void PrintHelpUsage() {
     }
 }
 
-void GetPixelQuery(const SharedBitmap& bmp) {
+void GetPixelQuery(const Bitmap& bmp) {
     size_t x = 0, y = 0;
     std::cin >> y >> x;
 
