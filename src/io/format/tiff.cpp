@@ -1,4 +1,5 @@
 #include <tinytiffreader.h>
+#include <tinytiffwriter.h>
 #include <stdexcept>
 #include <cassert>
 #include "tiff.hpp"
@@ -28,6 +29,26 @@ namespace io {
 
         TinyTIFFReader_close(tiffr);
         return bmp;
+    }
+
+    void WriteGreyscaleToTIFF(const Bitmap& image, const char* filename) {
+        TinyTIFFWriterFile* tiffw = TinyTIFFWriter_open(
+                filename,
+                image.BytesPerPixel() * 8,
+                TinyTIFFWriter_UInt,
+                0,
+                image.Width(),
+                image.Height(),
+                TinyTIFFWriter_Greyscale
+        );
+        if (!tiffw) {
+            throw std::runtime_error("File already exists or need more rules");
+        }
+        TinyTIFFWriter_writeImage(tiffw, image.Data());
+        auto eptr = TinyTIFFWriter_getLastError(tiffw);
+        if (eptr != nullptr && strcmp(eptr, "") != 0) {
+            throw std::runtime_error(eptr);
+        }
     }
 
 } // namespace io

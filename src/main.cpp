@@ -22,6 +22,16 @@ void PrintHelpUsage() {
     return Bitmap{};
 }
 
+void WriteGreyscaleImage(const Bitmap& image, const char* file_path) {
+    try {
+        io::WriteGreyscaleToTIFF(image, file_path);
+    }
+    catch (const std::exception& e) {
+        std::cout << "Writing failed: " << e.what() << '\n';
+        Abort();
+    }
+}
+
 void GetPixelQuery(const Bitmap& bmp) {
     size_t x = 0, y = 0;
     std::cin >> y >> x;
@@ -48,9 +58,9 @@ int main(int argc, char* argv[]) {
 
     std::cout << "Computations are finished\n" << '\n';
 
-    while(true) {
-        GetPixelQuery(green_vh.V);
-    }
+    WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
+    WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
 
+    std::cout << "Writing completed\n" << '\n';
     return 0;
 }

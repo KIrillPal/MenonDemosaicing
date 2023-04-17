@@ -49,6 +49,9 @@ public:
     size_t BytesPerPixel() const {
         return p_;
     }
+    const uint8_t* Data() const {
+        return data_.get();
+    }
     uint8_t* Data() {
         return data_.get();
     }

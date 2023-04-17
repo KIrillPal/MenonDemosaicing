@@ -3,4 +3,5 @@
 
 namespace io {
     Bitmap ReadBitmapFromTIFF(const char *file_path);
+    void WriteGreyscaleToTIFF(const Bitmap& image, const char* filename);
 }
