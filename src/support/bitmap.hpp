@@ -5,6 +5,9 @@
 #include <cstring>
 #include <vector>
 
+//#define NDEBUG
+
+
 // Class of pixel array with only one channel
 // Copyable
 // Trivially movable
@@ -93,6 +96,18 @@ public:
         assert(x < h_ && y < w_);
         size_t offset = (x * w_ + y) * p_;
         *reinterpret_cast<T*>(data_.get() + offset) = value;
+    }
+
+    // Just reads sizeof(T) bytes from pixel data
+    // or zero if (x, y) is out of bounds
+    template <typename T>
+    T GetSafe(size_t x, size_t y) const {
+        if (x < h_ && y < w_) {
+            size_t offset = (x * w_ + y) * p_;
+            return *reinterpret_cast<T *>(data_.get() + offset);
+        }
+        // default value
+        return 0;
     }
 
 private:

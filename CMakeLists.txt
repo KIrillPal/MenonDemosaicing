@@ -25,7 +25,8 @@ add_library(arithmetics ${SRC}/support/bitmap_arithmetics.cpp)
 add_library(posteriori ${SRC}/decision/posteriori.cpp)
 target_link_libraries(posteriori arithmetics)
 
+add_library(rb ${SRC}/interpolation/rb.cpp)
 
 add_executable (menon ${SRC}/main.cpp)
-target_link_libraries(menon readtiff interpolate posteriori)
+target_link_libraries(menon readtiff interpolate posteriori rb)
 set_target_properties(menon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../ )

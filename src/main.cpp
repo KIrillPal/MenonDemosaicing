@@ -2,6 +2,7 @@
 #include "io/format/tiff.hpp"
 #include "interpolation/directional.hpp"
 #include "decision/posteriori.hpp"
+#include "interpolation/rb.hpp"
 
 void Abort(int code = 0) {
     std::cout << "ABORTING\n";
@@ -61,15 +62,21 @@ int main(int argc, char* argv[]) {
 
     auto class_diff = menon::GetClassifierDifference(image, green_vh);
 
+    std::cout << "Classifiers found\n" << '\n';
     WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
     WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
 
-    std::cout << "Classifiers are found\n" << '\n';
-
     auto green = menon::Posteriori(green_vh, class_diff);
 
+    std::cout << "Green layer found\n" << '\n';
     WriteGreyscaleImage(green, "green.tiff");
 
-    std::cout << "Writing completed\n" << '\n';
+    auto rb = menon::InterpolateRB(image, green, class_diff);
+    std::cout << "Red and blue layers found\n" << '\n';
+
+    WriteGreyscaleImage(rb.V, "red.tiff");
+    WriteGreyscaleImage(rb.H, "blue.tiff");
+
+    std::cout << "Writing finished\n" << '\n';
     return 0;
 }
