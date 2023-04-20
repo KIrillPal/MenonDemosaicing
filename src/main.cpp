@@ -1,6 +1,7 @@
 #include <iostream>
 #include "io/format/tiff.hpp"
 #include "interpolation/directional.hpp"
+#include "decision/posteriori.hpp"
 
 void Abort(int code = 0) {
     std::cout << "ABORTING\n";
@@ -56,10 +57,18 @@ int main(int argc, char* argv[]) {
 
     auto green_vh = menon::InterpolateVHInParallel(image);
 
-    std::cout << "Computations are finished\n" << '\n';
+    std::cout << "VH are finished\n" << '\n';
+
+    auto class_diff = menon::GetClassifierDifference(image, green_vh);
 
     WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
     WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
+
+    std::cout << "Classifiers are found\n" << '\n';
+
+    auto green = menon::Posteriori(green_vh, class_diff);
+
+    WriteGreyscaleImage(green, "green.tiff");
 
     std::cout << "Writing completed\n" << '\n';
     return 0;

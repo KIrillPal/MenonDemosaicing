@@ -4,12 +4,10 @@
 
 #define PARALLEL
 #define SIMD
+#define RGGB
 
 namespace menon {
     // Two variants of interpolation (vertical and horizontal)
-    struct BitmapVH {
-        Bitmap V, H;
-    };
     Bitmap InterpolateVertical  (const Bitmap& mosaic);
     Bitmap InterpolateHorizontal(const Bitmap& mosaic);
     Bitmap InterpolateDirectional(const Bitmap& mosaic, Direction d);

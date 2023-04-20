@@ -7,3 +7,4 @@ CMakeSettings.json
 cmake-build-debug
 # Output file
 menon
+*.tiff

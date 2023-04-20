@@ -93,7 +93,11 @@ namespace menon {
         for (size_t x = 0; x < h; ++x)
         {
             // position of the first R or B in a row
-            size_t pf = x & 1;
+#ifdef RGGB
+            size_t pf =  x & 1;
+#else
+            size_t pf =  (~x) & 1;
+#endif
             for (size_t y = pf; y < w; y += 2) {
 
                 // Apply the filter
@@ -159,7 +163,11 @@ namespace menon {
         for (size_t x = 0; x < h; ++x)
         {
             // position of the first R or B in a row
-            size_t pf = x & 1;
+#ifdef RGGB
+            size_t pf =  x & 1;
+#else
+            size_t pf =  (~x) & 1;
+#endif
             row.assign(row.size(), 0);
 
             // set 0-st value if pf

@@ -80,6 +80,13 @@ public:
         size_t offset = (x * w_ + y) * p_; // the same as Get()
         return *reinterpret_cast<T*>(data_.get() + offset);
     }
+    // non-const version
+    template <typename T>
+    T& Get(size_t x, size_t y) {
+        assert(x < h_ && y < w_);
+        size_t offset = (x * w_ + y) * p_;
+        return *reinterpret_cast<T*>(data_.get() + offset);
+    }
 
     template <typename T>
     void Set(size_t x, size_t y, T value) {
@@ -94,4 +101,9 @@ private:
     size_t h_{0}; // height
     size_t p_{0}; // bytes per pixel
     LARGEST_TYPE mask_{0}; // mask to get first p_ bytes from LARGEST_TYPE
+};
+
+// a pair of bitmaps with different orientation
+struct BitmapVH {
+    Bitmap V, H;
 };
