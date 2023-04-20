@@ -1,5 +1,5 @@
 #pragma once
-#include "../support/rgb.hpp"
+#include "../support/bitmap.hpp"
 #include "filter.hpp"
 
 //#define PARALLEL

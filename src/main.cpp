@@ -63,20 +63,22 @@ int main(int argc, char* argv[]) {
     auto class_diff = menon::GetClassifierDifference(image, green_vh);
 
     std::cout << "Classifiers found\n" << '\n';
-    WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
-    WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
+    //WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
+    //WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
 
     auto green = menon::Posteriori(green_vh, class_diff);
 
     std::cout << "Green layer found\n" << '\n';
-    WriteGreyscaleImage(green, "green.tiff");
+    //WriteGreyscaleImage(green, "green.tiff");
 
     auto rb = menon::InterpolateRB(image, green, class_diff);
     std::cout << "Red and blue layers found\n" << '\n';
 
-    WriteGreyscaleImage(rb.V, "red.tiff");
-    WriteGreyscaleImage(rb.H, "blue.tiff");
+    //WriteGreyscaleImage(rb.V, "red.tiff");
+    //WriteGreyscaleImage(rb.H, "blue.tiff");
 
+    io::WriteRGBToTIFF(rb.V, green, rb.H, "result.tiff");
     std::cout << "Writing finished\n" << '\n';
+
     return 0;
 }

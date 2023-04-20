@@ -1,3 +1,4 @@
+#include "../../support/rgb.hpp"
 #include <tinytiffreader.h>
 #include <tinytiffwriter.h>
 #include <stdexcept>
@@ -45,6 +46,29 @@ namespace io {
             throw std::runtime_error("File already exists or need more rules");
         }
         TinyTIFFWriter_writeImage(tiffw, image.Data());
+        auto eptr = TinyTIFFWriter_getLastError(tiffw);
+        if (eptr != nullptr && strcmp(eptr, "") != 0) {
+            throw std::runtime_error(eptr);
+        }
+    }
+
+    void WriteRGBToTIFF(const Bitmap& R, const Bitmap& G, const Bitmap& B, const char* filename) {
+        std::vector<uint16_t> image = rgb::PackRGB(R, G, B);
+
+        TinyTIFFWriterFile* tiffw = TinyTIFFWriter_open(
+                filename,
+                // 3 channels of BPP bytes * (bits in byte)
+                R.BytesPerPixel() * 8,
+                TinyTIFFWriter_UInt,
+                3,
+                R.Width(),
+                R.Height(),
+                TinyTIFFWriter_RGB
+        );
+        if (!tiffw) {
+            throw std::runtime_error("File already exists or need more rules");
+        }
+        TinyTIFFWriter_writeImage(tiffw, image.data());
         auto eptr = TinyTIFFWriter_getLastError(tiffw);
         if (eptr != nullptr && strcmp(eptr, "") != 0) {
             throw std::runtime_error(eptr);
