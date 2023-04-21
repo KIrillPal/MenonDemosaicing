@@ -7,7 +7,7 @@ void Abort(int code = 0) {
 }
 
 void PrintHelpUsage() {
-    std::cout << "Usage: menon <file .tiff>\n\n";
+    std::cout << "Usage: menon <file.tiff>\n";
 }
 
  Bitmap ReadImage(const char* file_path) {
@@ -43,6 +43,6 @@ int main(int argc, char* argv[]) {
     auto image = menon::Demosaicing(bayer);
 
     io::WriteRGBToTIFF(image, "result.tiff");
-    std::cout << "Writing finished\n" << '\n';
+    std::cout << "Writing finished\n";
     return 0;
 }

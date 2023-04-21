@@ -12,8 +12,8 @@
 
 namespace menon {
     // Two variants of interpolation (vertical and horizontal)
-    Bitmap InterpolateVertical  (const Bitmap& mosaic);
-    Bitmap InterpolateHorizontal(const Bitmap& mosaic);
-    Bitmap InterpolateDirectional(const Bitmap& mosaic, Direction d);
-    BitmapVH InterpolateVHInParallel(const Bitmap& mosaic);
+    Bitmap InterpolateVertical  (const Bitmap& cfa);
+    Bitmap InterpolateHorizontal(const Bitmap& cfa);
+    Bitmap InterpolateDirectional(const Bitmap& cfa, Direction d);
+    BitmapVH InterpolateVHInParallel(const Bitmap& cfa);
 } // namespace menon

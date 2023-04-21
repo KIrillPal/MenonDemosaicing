@@ -23,7 +23,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMD")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 # Set RGGB mosaic format
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRGGB")
-
+# Set maximum optimization
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 ###############################################################
 

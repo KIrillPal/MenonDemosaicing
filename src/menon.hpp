@@ -11,16 +11,16 @@
 
 namespace menon {
 
-    // Gets an RGB image from the mosaic using the Menon Demosaicing algorithm
-    // mosaic - RGGB Bayer mosaic.
+    // Gets an RGB image from the CFA mosaic using the Menon Decfaing algorithm
+    // cfa - RGGB Bayer CFA mosaic.
     // For GRBG remove define RGGB in /CMakeLists.txt row 25
     //
-    rgb::BitmapRGB Demosaicing(const Bitmap& mosaic) {
-        auto green_vh = menon::InterpolateVHInParallel(mosaic);
+    rgb::BitmapRGB Demosaicing(const Bitmap& cfa) {
+        auto green_vh = menon::InterpolateVHInParallel(cfa);
 
         std::cout << "VH are finished\n" << '\n';
 
-        auto class_diff = menon::GetClassifierDifference(mosaic, green_vh);
+        auto class_diff = menon::GetClassifierDifference(cfa, green_vh);
 
         std::cout << "Classifiers found\n" << '\n';
         //WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
@@ -30,7 +30,7 @@ namespace menon {
 
         std::cout << "Green layer found\n" << '\n';
 
-        auto rb = menon::InterpolateRB(mosaic, green, class_diff);
+        auto rb = menon::InterpolateRB(cfa, green, class_diff);
         std::cout << "Red and blue layers found\n" << '\n';
 
         return rgb::BitmapRGB{
@@ -39,8 +39,9 @@ namespace menon {
             std::move(rb.H)
         };
     }
-    // Example to load mosaic from one-sampled tiff image:
-    //      Bitmap mosaic = io::ReadImage("mosaic.tiff");
+    //
+    // Example to load cfa from one-sampled tiff image:
+    //      Bitmap cfa = io::ReadImage("cfa.tiff");
     //
     // To save result use io::WriteRGBToTIFF(result);
     //

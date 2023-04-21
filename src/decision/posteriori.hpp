@@ -8,6 +8,6 @@ namespace menon {
 
     // Computes the difference between vertical and horizontal classifiers of given interpolations
     // for each pixel
-    Bitmap GetClassifierDifference(const Bitmap& mosaic, const BitmapVH& interpolation);
+    Bitmap GetClassifierDifference(const Bitmap& cfa, const BitmapVH& interpolation);
 
 } // namespace menon
