@@ -1,5 +1,4 @@
 #include <thread>
-#include <iostream>
 #include "posteriori.hpp"
 #include "../support/bitmap_arithmetics.hpp"
 
@@ -15,7 +14,7 @@ namespace menon {
 
     Bitmap GetGradient(const Bitmap& mosaic, const Bitmap& layer, size_t dx, size_t dy) {
         Bitmap chrominance = GetChrominance(mosaic, layer);
-        Div2(chrominance);
+        Shift(chrominance);
         SubShifted(chrominance, chrominance, dx, dy);
         Abs(chrominance);
         return chrominance;
@@ -55,7 +54,7 @@ namespace menon {
         size_t h = mosaic.Height();
 
         // Prepare sum of column y: sum of the window [x - AREA_HALF, ..., x + AREA_HALF]
-        std::vector<unsigned> column_sum(w);
+        std::vector<int> column_sum(w);
         for (size_t y = 0; y < w; ++y) {
             for (size_t x = 0; x <= AREA_HALF && x < h; ++x) {
                 column_sum[y] += grads.H.Get<int16_t>(x, y);
@@ -88,13 +87,13 @@ namespace menon {
                     }
                 }
             }
-            for (size_t p = 0; p < AREA_HALF && p < h; ++p) {
+            for (size_t p = 0; p < AREA_HALF && p < w; ++p) {
                 // Move the column window
                 if (x >= AREA_HALF) {
-                    column_sum[h-p-1] -= grads.H.Get<int16_t>(x - AREA_HALF, h-p-1);
+                    column_sum[w-p-1] -= grads.H.Get<int16_t>(x - AREA_HALF, w-p-1);
                 }
                 if (x + AREA_HALF + 1 < h) {
-                    column_sum[h-p-1] += grads.H.Get<int16_t>(x + AREA_HALF + 1, h-p-1);
+                    column_sum[w-p-1] += grads.H.Get<int16_t>(x + AREA_HALF + 1, w-p-1);
                 }
             }
         }

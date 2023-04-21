@@ -2,8 +2,6 @@
 #include "../support/bitmap.hpp"
 #include "filter.hpp"
 
-//#define PARALLEL
-//#define SIMD
 #define RGGB
 
 // define 'size_t pf' - variable shows the first red or blue pixel position in x-th row

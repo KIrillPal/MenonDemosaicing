@@ -13,7 +13,17 @@ add_subdirectory(${SRC}/io/TinyTIFF ./TinyTIFF)
 
 
 ###############################################################
+# config
 
+# Compute concurrently (use several threads)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPARALLEL")
+# Use SIMD
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMD")
+# Disable asserts
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
+
+
+###############################################################
 add_library(readtiff ${SRC}/io/format/tiff.cpp)
 target_link_libraries(readtiff TinyTIFF)
 

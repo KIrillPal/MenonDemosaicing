@@ -1,7 +1,6 @@
 #include "rb.hpp"
 #include "../support/bitmap_arithmetics.hpp"
 #include <thread>
-#include <iostream>
 
 namespace menon {
 
@@ -38,7 +37,7 @@ namespace menon {
             bool is_red_row = (~x) & 1;
 
             for (size_t y = 1-pf; y < w; y += 2) {
-                int r = red.Get<uint16_t>(x, y) << 1;
+                int r = red.Get<uint16_t>(x, y);
                 int b = r;
                 if (is_red_row) {
                     r += chrom.GetSafe<int16_t>(x, y - 1);
@@ -52,10 +51,10 @@ namespace menon {
                     b += chrom.GetSafe<int16_t>(x, y - 1);
                     b += chrom.GetSafe<int16_t>(x, y + 1);
                 }
-                r = std::min(std::max(r, 0), UINT16_MAX << 1);
-                b = std::min(std::max(b, 0), UINT16_MAX << 1);
-                red.Set(x, y, static_cast<uint16_t>(r >> 1));
-                blue.Set(x, y, static_cast<uint16_t>(b >> 1));
+                r = std::min(std::max(r, 0), UINT16_MAX);
+                b = std::min(std::max(b, 0), UINT16_MAX);
+                red.Set(x, y, static_cast<uint16_t>(r));
+                blue.Set(x, y, static_cast<uint16_t>(b));
             }
         }
     }
@@ -64,18 +63,18 @@ namespace menon {
     void FillRBRBSimple(Bitmap& red, Bitmap& blue, const Bitmap& diff) {
         size_t h = red.Height();
         size_t w = red.Width();
+
+        // (R - B) / 2;
+        // we lose quality(last bit) but win speed
         auto rb_chrom = red;
-        Sub(rb_chrom, blue);
+        SubDiv2(rb_chrom, blue);
 
         for (size_t x = 0; x < h; ++x) {
             SIZE_T_PF(x)
             bool is_red_row = (~x) & 1;
 
             for (size_t y = pf; y < w; y += 2) {
-                if (x == 4 && y == 4) {
-                    int k = 1;
-                }
-                int c = (is_red_row ? red : blue).Get<uint16_t>(x, y) << 1;
+                int c = (is_red_row ? red : blue).Get<uint16_t>(x, y);
                 int sum = 0;
                 if (diff.Get<int>(x, y) < 0) {
                     sum += rb_chrom.GetSafe<int16_t>(x, y - 1);
@@ -86,9 +85,9 @@ namespace menon {
                     sum += rb_chrom.GetSafe<int16_t>(x + 1, y);
                 }
                 c += (is_red_row ? -sum : sum );
-                c = std::min(std::max(c, 0), UINT16_MAX << 1);
+                c = std::min(std::max(c, 0), UINT16_MAX);
 
-                (is_red_row ? blue : red).Set(x, y, static_cast<uint16_t>(c >> 1));
+                (is_red_row ? blue : red).Set(x, y, static_cast<uint16_t>(c));
             }
         }
     }
@@ -97,9 +96,9 @@ namespace menon {
         Bitmap red (mosaic);
         Bitmap blue(mosaic);
 
-        // Chrominance R - G or B - G.
+        // Chrominance (R - G) / 2 or (B - G) / 2.
         auto chrom = mosaic;
-        Sub(chrom, green);
+        SubDiv2(chrom, green);
 
         FillGreenRB(red, blue, chrom);
         FillRBRB(red, blue, diff);
