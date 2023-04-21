@@ -75,4 +75,8 @@ namespace io {
         }
     }
 
+    void WriteRGBToTIFF(const rgb::BitmapRGB& image, const char* filename) {
+        WriteRGBToTIFF(image.R, image.G, image.B, filename);
+    }
+
 } // namespace io
