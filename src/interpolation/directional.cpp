@@ -1,8 +1,11 @@
 #include <algorithm>
-#include <immintrin.h>
 #include <array>
 #include <thread>
 #include "directional.hpp"
+
+#if defined(SIMD)
+#include <immintrin.h>
+#endif
 
 #define GET_DIRECTIONAL(bmp, x, y, dir) (dir == HORIZONTAL ? bmp.Get(x, y) : bmp.Get(y, x))
 #define GET_INT_DIRECTIONAL(bmp, x, y, dir) (static_cast<int>(dir == HORIZONTAL ? bmp.Get(x, y) : bmp.Get(y, x)))
@@ -15,7 +18,7 @@ namespace menon {
 
     // Interpolates green color in Bayer mosaic by direction d
     Bitmap InterpolateDirectional(const Bitmap& mosaic, Direction d) {
-#ifdef SIMD
+#if defined(SIMD)
         return InterpolateDirectionalWithSIMD(mosaic, d);
 #else
         return InterpolateDirectionalSimple(mosaic, d);
@@ -29,7 +32,7 @@ namespace menon {
         return InterpolateDirectional(mosaic, Direction::HORIZONTAL);
     }
 
-    BitmapVH InterpolateVHInParallel(const Bitmap& mosaic) {
+    BitmapVH InterpolateGreenVH(const Bitmap& mosaic) {
         BitmapVH result;
 #ifdef PARALLEL
         std::thread vertical([&]() {
@@ -130,6 +133,8 @@ namespace menon {
         return dest;
     }
 
+#if defined(SIMD)
+
     // The implementation with SIMD. Safe to use in several threads
     // BE CAREFUL: filter length must not exceed SIMD_ITEMS_SIZE, it's SIMD_BITS_SIZE bits
     Bitmap InterpolateDirectionalWithSIMD(const Bitmap& mosaic, Direction d) {
@@ -218,4 +223,7 @@ namespace menon {
         }
         return dest;
     }
+#endif
+
 } // namespace menon
+

@@ -18,7 +18,7 @@ add_subdirectory(${SRC}/io/TinyTIFF ./TinyTIFF)
 # Compute concurrently (use several threads)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPARALLEL")
 # Use SIMD
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMD")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSIMD -march=native")
 # Disable asserts
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 # Set RGGB mosaic format
@@ -33,7 +33,6 @@ add_library(rgb_utils ${SRC}/support/rgb.cpp)
 add_library(readtiff ${SRC}/io/format/tiff.cpp)
 target_link_libraries(readtiff TinyTIFF rgb_utils)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 add_library(interpolate ${SRC}/interpolation/directional.cpp)
 
 
@@ -44,6 +43,8 @@ target_link_libraries(posteriori arithmetics)
 
 add_library(rb ${SRC}/interpolation/rb.cpp)
 
+add_library(lp ${SRC}/refining/lowpass.cpp)
+
 add_executable (menon ${SRC}/main.cpp)
-target_link_libraries(menon readtiff interpolate posteriori rb)
-set_target_properties(menon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../ )
+target_link_libraries(menon readtiff interpolate posteriori rb lp)
+set_target_properties(menon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../)

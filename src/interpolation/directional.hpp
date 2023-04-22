@@ -15,5 +15,5 @@ namespace menon {
     Bitmap InterpolateVertical  (const Bitmap& cfa);
     Bitmap InterpolateHorizontal(const Bitmap& cfa);
     Bitmap InterpolateDirectional(const Bitmap& cfa, Direction d);
-    BitmapVH InterpolateVHInParallel(const Bitmap& cfa);
+    BitmapVH InterpolateGreenVH(const Bitmap& cfa);
 } // namespace menon

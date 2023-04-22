@@ -2,12 +2,21 @@
 
 // For debug
 #include <iostream>
+#include <chrono>
 
+#include "support/bitmap_arithmetics.hpp"
 #include "io/format/tiff.hpp"
 #include "interpolation/directional.hpp"
 #include "decision/posteriori.hpp"
 #include "interpolation/rb.hpp"
 #include "support/rgb.hpp"
+#include "refining/lowpass.hpp"
+
+#define TIMESTAMP { \
+auto now = std::chrono::system_clock::now(); \
+std::chrono::duration duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start); \
+std::cout << duration.count() << " ms \n";       \
+}
 
 namespace menon {
 
@@ -16,22 +25,42 @@ namespace menon {
     // For GRBG remove define RGGB in /CMakeLists.txt row 25
     //
     rgb::BitmapRGB Demosaicing(const Bitmap& cfa) {
-        auto green_vh = menon::InterpolateVHInParallel(cfa);
+        auto start = std::chrono::system_clock::now();
+        TIMESTAMP
 
-        std::cout << "VH are finished\n" << '\n';
+        Bitmap cfa32 = std::move(CopyCast32(cfa));
+
+        // Get low-pass values in two directions
+        auto lpVH_future = lp::GetLowpassFilterVHAsync(cfa32);
+
+        auto green_vh = menon::InterpolateGreenVH(cfa);
+
+        std::cout << "VH are finished\n" << ' ';
+        TIMESTAMP
 
         auto class_diff = menon::GetClassifierDifference(cfa, green_vh);
 
-        std::cout << "Classifiers found\n" << '\n';
-        //WriteGreyscaleImage(green_vh.V, "sample_v.tiff");
-        //WriteGreyscaleImage(green_vh.H, "sample_h.tiff");
+        std::cout << "Classifiers found " << ' ';
+        TIMESTAMP
 
         auto green = menon::Posteriori(green_vh, class_diff);
 
-        std::cout << "Green layer found\n" << '\n';
+        std::cout << "Green layer found " << ' ';
+        TIMESTAMP
 
-        auto rb = menon::InterpolateRB(cfa, green, class_diff);
-        std::cout << "Red and blue layers found\n" << '\n';
+        auto rb = menon::InterpolateRBonGreen(cfa, green);
+        std::cout << "RB on Green found " << ' ';
+        TIMESTAMP
+
+        lpVH_future.wait();
+
+        menon::FillRBonRB(rb, class_diff);
+        std::cout << "RB on RB found " << ' ';
+        TIMESTAMP
+
+
+        std::cout << "Red and blue layers found " << ' ';
+        TIMESTAMP
 
         return rgb::BitmapRGB{
             std::move(rb.V),

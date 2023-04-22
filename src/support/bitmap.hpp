@@ -12,9 +12,10 @@ class Bitmap {
 public:
     // Type of the maximum sample(pixel) size.
     // Used in 'Get' function to make it able to return code of each size.
-    using LARGEST_TYPE = uint64_t;
-    // Offset to let us read entire LARGEST_TYPE variable even at the last pixel
-    static constexpr size_t DATA_SAFE_OFFSET = sizeof(uint64_t);
+    using LARGEST_TYPE = uint32_t;
+    // Offset to let us read entire 128b variables even at the last pixel
+    // This is essential for SIMD instructions
+    static constexpr size_t DATA_SAFE_OFFSET = 16;
 //////////////////////////////////////////////////////////////////////////////////
 
     Bitmap() = default;
@@ -23,8 +24,8 @@ public:
             : h_{height},
               w_{width},
               p_{bytes_per_pixel},
-              data_{new uint8_t[height * width * bytes_per_pixel + DATA_SAFE_OFFSET]},
-              mask_{(1ULL << (bytes_per_pixel << 3)) - 1} {
+              data_{new (std::align_val_t{ 128 }) uint8_t[height * width * bytes_per_pixel + DATA_SAFE_OFFSET]},
+              mask_{(static_cast<LARGEST_TYPE>(1) << (bytes_per_pixel << 3)) - 1} {
     }
 
     // Copyable
@@ -118,4 +119,11 @@ private:
 // a pair of bitmaps with different orientation
 struct BitmapVH {
     Bitmap V, H;
+
+    static BitmapVH Create(size_t height, size_t width, uint16_t bytes_per_pixel) {
+        return {
+                Bitmap{height, width, bytes_per_pixel},
+                Bitmap{height, width, bytes_per_pixel}
+        };
+    }
 };

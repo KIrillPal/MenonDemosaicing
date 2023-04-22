@@ -92,7 +92,7 @@ namespace menon {
         }
     }
 
-    BitmapVH InterpolateRB(const Bitmap& mosaic, const Bitmap& green, const Bitmap& diff) {
+    BitmapVH InterpolateRBonGreen(const Bitmap& mosaic, const Bitmap& green) {
         Bitmap red (mosaic);
         Bitmap blue(mosaic);
 
@@ -101,9 +101,12 @@ namespace menon {
         SubDiv2(chrom, green);
 
         FillGreenRB(red, blue, chrom);
-        FillRBRB(red, blue, diff);
 
         return BitmapVH{std::move(red), std::move(blue)};
+    }
+
+    void FillRBonRB(BitmapVH& rb, const Bitmap& diff) {
+        FillRBRB(rb.V, rb.H, diff);
     }
 
 

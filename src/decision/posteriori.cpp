@@ -2,19 +2,27 @@
 #include "posteriori.hpp"
 #include "../support/bitmap_arithmetics.hpp"
 
+// for debug
+#include <iostream>
+#include <chrono>
+#define TIMESTAMP { \
+auto now = std::chrono::system_clock::now(); \
+std::chrono::duration duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start); \
+std::cout << duration.count() << " ms \n";       \
+}
+
 namespace menon {
     // turns
     Bitmap GetChrominance(const Bitmap& mosaic, const Bitmap& layer) {
         Bitmap chrominance = mosaic;
         Sub(chrominance, layer);
-        //std::cout << "copy-layer " << chrominance.Get<uint16_t>(8, 12) << '\n';
         Abs(chrominance);
         return chrominance;
     }
 
     Bitmap GetGradient(const Bitmap& mosaic, const Bitmap& layer, size_t dx, size_t dy) {
         Bitmap chrominance = GetChrominance(mosaic, layer);
-        Shift(chrominance);
+        Shift(chrominance, 1);
         SubShifted(chrominance, chrominance, dx, dy);
         Abs(chrominance);
         return chrominance;
@@ -44,8 +52,13 @@ namespace menon {
         constexpr size_t AREA_SIZE = 5;
         constexpr size_t AREA_HALF = AREA_SIZE >> 1;
 
+        auto start = std::chrono::system_clock::now();
+
         auto grads = GetGradients(mosaic, interpolation);
         Sub(grads.H, grads.V);
+        std::cout << "Gradients found ";
+        TIMESTAMP
+        start = std::chrono::system_clock::now();
         // now grads.H is the difference beween gradients.
         // To get classifier difference let's sum grades by the area of 5x5.
         // if out of bounds just sum the rest
@@ -97,6 +110,9 @@ namespace menon {
                 }
             }
         }
+        std::cout << "Classes found ";
+        TIMESTAMP
+
         return diff;
     }
 
