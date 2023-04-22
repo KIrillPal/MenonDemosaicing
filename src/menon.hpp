@@ -58,9 +58,12 @@ namespace menon {
         std::cout << "RB on RB found " << ' ';
         TIMESTAMP
 
-
         std::cout << "Red and blue layers found " << ' ';
         TIMESTAMP
+
+        auto lpVH = lpVH_future.get();
+        io::WriteGreyscaleToTIFF(CopyCast16(lpVH.V), "lpv.tiff");
+        io::WriteGreyscaleToTIFF(CopyCast16(lpVH.H), "lph.tiff");
 
         return rgb::BitmapRGB{
             std::move(rb.V),

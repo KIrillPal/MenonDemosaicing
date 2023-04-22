@@ -21,9 +21,11 @@ void ShiftWithSIMD(Bitmap& b, int offset);
 void SubDiv2Simple(Bitmap& b1, const Bitmap& b2);
 void SubDiv2WithSIMD(Bitmap& b1, const Bitmap& b2);
 
-
 Bitmap CopyCast32Simple(const Bitmap& b);
 Bitmap CopyCast32WithSIMD(const Bitmap& b);
+Bitmap CopyCast16Simple(const Bitmap& b);
+//Bitmap CopyCast16WithSIMD(const Bitmap& b);
+
 
 void AddShifted(Bitmap& b1, const Bitmap& b2, int dx, int dy) {
 #ifdef SIMD
@@ -55,6 +57,11 @@ Bitmap CopyCast32(const Bitmap& b) {
 #else
     return CopyCast32Simple(b);
 #endif
+}
+
+Bitmap CopyCast16(const Bitmap& b) {
+    // No such SIMD instruction
+    return CopyCast16Simple(b);
 }
 
 void Abs(Bitmap& b) {
@@ -223,6 +230,17 @@ Bitmap CopyCast32Simple(const Bitmap& b) {
     return cp;
 }
 
+Bitmap CopyCast16Simple(const Bitmap& b) {
+    size_t h = b.Height();
+    size_t w = b.Width();
+    Bitmap cp(h, w, sizeof(uint16_t));
+    FOR_EVERY_PIXEL(b, {
+        int v = std::min(std::max(b.Get<int>(x, y), 0), UINT16_MAX);
+        cp.Set(x, y, static_cast<uint16_t>(v));
+    })
+    return cp;
+}
+
 void FillWithZeros(Bitmap& b) {
     std::memset(b.Data(), 0, b.Width()*b.Height()*b.BytesPerPixel());
 }
@@ -325,9 +343,9 @@ void SubShiftedWithSIMD(Bitmap& b1, const Bitmap& b2, int dx, int dy)
                     auto b2_data = reinterpret_cast<const int16_t *>(b2.Data());
             ,
                     __m128i row1 = _mm_loadu_si128((__m128i *) (&b1_data[row1_pos + y]));
-                            __m128i row2 = _mm_loadu_si128((__m128i *) (&b2_data[row2_pos + y + dy]));
-                            __m128i sub = _mm_sub_epi16(row1, row2);
-                            _mm_storeu_si128((__m128i *) (&b1_data[row1_pos + y]), sub);
+                    __m128i row2 = _mm_loadu_si128((__m128i *) (&b2_data[row2_pos + y + dy]));
+                    __m128i sub = _mm_sub_epi16(row1, row2);
+                    _mm_storeu_si128((__m128i *) (&b1_data[row1_pos + y]), sub);
             ,
                     b1_data[row1_pos + y] += b2_data[row2_pos + y + dy];
             ) break;
@@ -411,8 +429,8 @@ void ShiftWithSIMD(Bitmap& b, int offset) {
             auto data = reinterpret_cast<int16_t *>(b.Data());
     ,
             __m128i row = _mm_loadu_si128((__m128i *) (&data[row_pos + y]));
-                    __m128i abs = _mm_srli_epi16(row, offset);
-                    _mm_storeu_si128((__m128i *) (&data[row_pos + y]), abs);
+            __m128i abs = _mm_srli_epi16(row, offset);
+            _mm_storeu_si128((__m128i *) (&data[row_pos + y]), abs);
     ,
             data[row_pos + y] >>= offset;
     )

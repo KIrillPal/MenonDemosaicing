@@ -33,9 +33,13 @@ void SubDiv2(Bitmap& b1, const Bitmap& b2);
 // Operation b := |b|
 void Abs(Bitmap& b);
 
-// Copies b with casting its values to int
+// Copies b with casting its values to int from uint16_t
 // Returns Bitmap<int>
 Bitmap CopyCast32(const Bitmap& b);
+
+// Copies b with casting its values to uint16_t from int
+// Returns Bitmap<uint16_t>
+Bitmap CopyCast16(const Bitmap& b);
 
 // Fills bitmap b with zeros
 void FillWithZeros(Bitmap& b);

@@ -5,8 +5,9 @@
 namespace lp {
     BitmapVH FilterVH(const Bitmap& cfa32) {
         // low pass for two directions
-        BitmapVH lp;
 
+#if defined(PARALLEL)
+        BitmapVH lp;
         std::thread vertical([&](){
             lp.V = Bitmap{
                 cfa32.Height(), cfa32.Width(),
@@ -27,6 +28,15 @@ namespace lp {
         });
         vertical.join();
         horizontal.join();
+#else
+        BitmapVH lp = std::move(BitmapVH::Create(cfa32.Height(), cfa32.Width(), sizeof(int)));
+        FillWithZeros(lp.V);
+        FillWithZeros(lp.H);
+        AddShifted(lp.V, cfa32, -1, 0);
+        AddShifted(lp.V, cfa32,  1, 0);
+        AddShifted(lp.H, cfa32, 0, -1);
+        AddShifted(lp.H, cfa32, 0,  1);
+#endif
         return lp;
     }
 
