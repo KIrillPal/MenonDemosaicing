@@ -19,6 +19,10 @@ void SubShifted(Bitmap& b1, const Bitmap& b2, int dx, int dy);
 // BE CAREFUL: b1 size must be equal to b2 size
 void Sub(Bitmap& b1, const Bitmap& b2);
 
+// Operation b1 := b1 + b2, where b1[i,j] += b2[i,j]
+// BE CAREFUL: b1 size must be equal to b2 size
+void Add(Bitmap& b1, const Bitmap& b2);
+
 // Operation b := b >> offset; unsigned
 void Shift(Bitmap& b, int offset);
 

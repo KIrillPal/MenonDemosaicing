@@ -114,6 +114,7 @@ namespace lp {
         // on the r/b positions
         // so use them as mosaic items
         Bitmap hp = CopyCast32(rb.V);
+        Add(hp, hp);
         auto data = reinterpret_cast<int*>(hp.Data());
 
         size_t h = diff.Height();
@@ -122,7 +123,7 @@ namespace lp {
         for (size_t x = 0; x < h; ++x) {
             SIZE_T_PF(x)
             bool is_red_row = (~x) & 1;
-            for (size_t y = 1-pf; y < w; y += 2) {
+            for (size_t y = pf; y < w; y += 2) {
                 // check if delta_H < delta_V => use H
                 const Bitmap& c = (is_red_row ? rb.V : rb.H);
                 if (diff.Get<int>(x, y) < 0) {

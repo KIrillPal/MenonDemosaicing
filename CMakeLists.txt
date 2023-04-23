@@ -25,6 +25,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DRGGB")
 # Set maximum optimization
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+# Add refining step
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DREFINE")
 
 ###############################################################
 
@@ -43,8 +45,8 @@ target_link_libraries(posteriori arithmetics)
 
 add_library(rb ${SRC}/interpolation/rb.cpp)
 
-add_library(lp ${SRC}/refining/lowpass.cpp)
+add_library(fine ${SRC}/refining/lowpass.cpp ${SRC}/refining/refine.cpp)
 
 add_executable (menon ${SRC}/main.cpp)
-target_link_libraries(menon readtiff interpolate posteriori rb lp)
+target_link_libraries(menon readtiff interpolate posteriori rb fine)
 set_target_properties(menon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ../)

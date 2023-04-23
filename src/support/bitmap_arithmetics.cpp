@@ -51,6 +51,10 @@ void Sub(Bitmap& b1, const Bitmap& b2) {
 #endif
 }
 
+void Add(Bitmap& b1, const Bitmap& b2) {
+    AddShifted(b1, b2, 0, 0);
+}
+
 Bitmap CopyCast32(const Bitmap& b) {
 #if defined(SIMD)
     return CopyCast32WithSIMD(b);

@@ -11,6 +11,7 @@
 #include "interpolation/rb.hpp"
 #include "support/rgb.hpp"
 #include "refining/lowpass.hpp"
+#include "refining/refine.hpp"
 
 #define TIMESTAMP { \
 auto now = std::chrono::system_clock::now(); \
@@ -29,10 +30,11 @@ namespace menon {
         auto start = std::chrono::system_clock::now();
         TIMESTAMP
 
+#if defined(REFINE)
         Bitmap cfa32 = std::move(CopyCast32(cfa));
-
         // Get low-pass values in two directions
         auto lpVH_future = lp::GetLowpassFilterVHAsync(cfa32);
+#endif
 
         auto green_vh = menon::InterpolateGreenVH(cfa);
 
@@ -49,30 +51,41 @@ namespace menon {
         std::cout << "Green layer found " << ' ';
         TIMESTAMP
 
+#if defined(REFINE)
         auto lpVH = lpVH_future.get();
-        auto lpG_future = lp::GetHighpassFilterGAsync(lpVH, green, class_diff);
-
+        auto hpG_future = lp::GetHighpassFilterGAsync(lpVH, green, class_diff);
+#endif
         auto rb = menon::InterpolateRBonGreen(cfa, green);
         std::cout << "RB on Green found " << ' ';
         TIMESTAMP
 
-        auto lpG = lpG_future.get();
-        auto lpRR_future = lp::GetHighpassFilterRonRAsync(rb, class_diff);
-
+#if defined(REFINE)
+        auto hpG = hpG_future.get();
+        auto hpRR_future = lp::GetHighpassFilterRonRAsync(rb, class_diff);
+#endif
         menon::FillRBonRB(rb, class_diff);
         std::cout << "RB on RB found " << ' ';
         TIMESTAMP
-
-        auto lpRR = lpRR_future.get();
-
+#if defined(REFINE)
+       auto hpRR = hpRR_future.get();
+#endif
         std::cout << "Red and blue layers found " << ' ';
         TIMESTAMP
 
-        //io::WriteGreyscaleToTIFF(green, "green.tiff");
-        //io::WriteGreyscaleToTIFF(rb.V, "red.tiff");
+#if defined(REFINE)
+        // Useless refining
+        //refine::RefineRBonG(rb, lpVH, hpG);
+        refine::RefineGonRB(green, hpG, hpRR);
+        refine::RefineRBonRB(rb, hpRR, class_diff);
+        std::cout << "Refining finished " << ' ';
+        TIMESTAMP
+#endif
+
+        io::WriteGreyscaleToTIFF(green, "green.tiff");
+        io::WriteGreyscaleToTIFF(green_vh.V, "green_v.tiff");
+        io::WriteGreyscaleToTIFF(green_vh.H, "green_h.tiff");
         //io::WriteGreyscaleToTIFF(rb.H, "blue.tiff");
-        //io::WriteGreyscaleToTIFF(CopyCast16(lpVH.V), "lpv.tiff");
-        io::WriteGreyscaleToTIFF(CopyCast16(lpG), "lpg.tiff");
+        //io::WriteGreyscaleToTIFF(CopyCast16(hpG), "hpg.tiff");
 
         return rgb::BitmapRGB{
             std::move(rb.V),
