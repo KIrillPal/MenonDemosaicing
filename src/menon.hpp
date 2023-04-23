@@ -15,6 +15,7 @@
 #define TIMESTAMP { \
 auto now = std::chrono::system_clock::now(); \
 std::chrono::duration duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start); \
+start = now;                                     \
 std::cout << duration.count() << " ms \n";       \
 }
 
@@ -48,22 +49,30 @@ namespace menon {
         std::cout << "Green layer found " << ' ';
         TIMESTAMP
 
+        auto lpVH = lpVH_future.get();
+        auto lpG_future = lp::GetHighpassFilterGAsync(lpVH, green, class_diff);
+
         auto rb = menon::InterpolateRBonGreen(cfa, green);
         std::cout << "RB on Green found " << ' ';
         TIMESTAMP
 
-        lpVH_future.wait();
+        auto lpG = lpG_future.get();
+        auto lpRR_future = lp::GetHighpassFilterRonRAsync(rb, class_diff);
 
         menon::FillRBonRB(rb, class_diff);
         std::cout << "RB on RB found " << ' ';
         TIMESTAMP
 
+        auto lpRR = lpRR_future.get();
+
         std::cout << "Red and blue layers found " << ' ';
         TIMESTAMP
 
-        auto lpVH = lpVH_future.get();
-        io::WriteGreyscaleToTIFF(CopyCast16(lpVH.V), "lpv.tiff");
-        io::WriteGreyscaleToTIFF(CopyCast16(lpVH.H), "lph.tiff");
+        //io::WriteGreyscaleToTIFF(green, "green.tiff");
+        //io::WriteGreyscaleToTIFF(rb.V, "red.tiff");
+        //io::WriteGreyscaleToTIFF(rb.H, "blue.tiff");
+        //io::WriteGreyscaleToTIFF(CopyCast16(lpVH.V), "lpv.tiff");
+        io::WriteGreyscaleToTIFF(CopyCast16(lpG), "lpg.tiff");
 
         return rgb::BitmapRGB{
             std::move(rb.V),

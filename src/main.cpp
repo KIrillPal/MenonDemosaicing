@@ -40,7 +40,18 @@ int main(int argc, char* argv[]) {
     std::cout << "Image size: " << bayer.Width() << " x " << bayer.Height() << '\n';
     std::cout << "Bytes per pixel: " << bayer.BytesPerPixel() << '\n';
 
-    auto image = menon::Demosaicing(bayer);
+    rgb::BitmapRGB image;
+    auto start = std::chrono::system_clock::now();
+
+    for (size_t i = 0; i < 1; ++i) {
+        std::cout << "Test " << i << ":\n";
+        auto start = std::chrono::system_clock::now();
+        image = menon::Demosaicing(bayer);
+        std::cout << "Total test time: ";
+        TIMESTAMP
+    }
+    std::cout << "Total time: ";
+    TIMESTAMP
 
     io::WriteRGBToTIFF(image, "result.tiff");
     std::cout << "Writing finished\n";

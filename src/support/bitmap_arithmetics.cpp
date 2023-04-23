@@ -441,16 +441,17 @@ void SubDiv2WithSIMD(Bitmap& b1, const Bitmap& b2) {
     size_t h = b1.Height();
     size_t w = b1.Width();
 
-    constexpr size_t SIMD_SIZE_ITEMS = (SIMD_SIZE_BITS >> 3) / sizeof(int16_t);
+    constexpr size_t SIMD_SIZE_ITEMS = (SIMD_SIZE_BITS >> 3) / sizeof(uint16_t);
     SIMD_OPERATION(
-            auto b1_data = reinterpret_cast<int16_t *>(b1.Data());
-            auto b2_data = reinterpret_cast<const int16_t *>(b2.Data());
+            auto b1_data = reinterpret_cast<uint16_t *>(b1.Data());
+            auto b2_data = reinterpret_cast<const uint16_t *>(b2.Data());
             ,
             __m128i row1 = _mm_loadu_si128((__m128i *) (&b1_data[row_pos + y]));
             __m128i row2 = _mm_loadu_si128((__m128i *) (&b2_data[row_pos + y]));
-            __m128i sub = _mm_sub_epi16(row1, row2);
-            __m128i sub2 = _mm_srai_epi16(sub, 1);
-            _mm_storeu_si128((__m128i *) (&b1_data[row_pos + y]), sub2);
+            __m128i row1_2 = _mm_srli_epi16(row1, 1);
+            __m128i row2_2 = _mm_srli_epi16(row2, 1);
+            __m128i sub_2 = _mm_sub_epi16(row1_2, row2_2);
+            _mm_storeu_si128((__m128i *) (&b1_data[row_pos + y]), sub_2);
             ,
             b1_data[row_pos + y] -= b2_data[row_pos + y];
             b1_data[row_pos + y] >>= 1;
