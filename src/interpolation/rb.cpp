@@ -28,35 +28,42 @@ namespace menon {
         FillRBRBSimple(red, blue, diff);
     }
 
+    // FIll C color on Green pixels
     // Implementation without SIMD
-    void FillGreenRBSimple(Bitmap& red, Bitmap& blue, const Bitmap& chrom) {
+    // odd = 0 for red and 1 for blue
+    void FillGreenCSimple(Bitmap& color, const Bitmap& chrom, int odd) {
         size_t h = chrom.Height();
         size_t w = chrom.Width();
         for (size_t x = 0; x < h; ++x) {
             SIZE_T_PF(x)
-            bool is_red_row = (~x) & 1;
+            bool is_c_row = (x & 1) == odd;
 
             for (size_t y = 1-pf; y < w; y += 2) {
-                int r = red.Get<uint16_t>(x, y);
-                int b = r;
-                if (is_red_row) {
-                    r += chrom.GetSafe<int16_t>(x, y - 1);
-                    r += chrom.GetSafe<int16_t>(x, y + 1);
-                    b += chrom.GetSafe<int16_t>(x - 1, y);
-                    b += chrom.GetSafe<int16_t>(x + 1, y);
+                int c = color.Get<uint16_t>(x, y);
+                if (is_c_row) {
+                    c += chrom.GetSafe<int16_t>(x, y - 1);
+                    c += chrom.GetSafe<int16_t>(x, y + 1);
                 }
                 else {
-                    r += chrom.GetSafe<int16_t>(x - 1, y);
-                    r += chrom.GetSafe<int16_t>(x + 1, y);
-                    b += chrom.GetSafe<int16_t>(x, y - 1);
-                    b += chrom.GetSafe<int16_t>(x, y + 1);
+                    c += chrom.GetSafe<int16_t>(x - 1, y);
+                    c += chrom.GetSafe<int16_t>(x + 1, y);
                 }
-                r = std::min(std::max(r, 0), UINT16_MAX);
-                b = std::min(std::max(b, 0), UINT16_MAX);
-                red.Set(x, y, static_cast<uint16_t>(r));
-                blue.Set(x, y, static_cast<uint16_t>(b));
+                c = std::min(std::max(c, 0), UINT16_MAX);
+                color.Set(x, y, static_cast<uint16_t>(c));
             }
         }
+    }
+
+    void FillGreenRBSimple(Bitmap& red, Bitmap& blue, const Bitmap& chrom) {
+#if not defined (PARALLEL)
+        std::thread fill_red ([&](){ FillGreenCSimple(red, chrom, 0); });
+        std::thread fill_blue([&](){ FillGreenCSimple(blue, chrom, 1); });
+        fill_red.join();
+        fill_blue.join();
+#else
+        FillGreenCSimple(red, chrom, 0);
+        FillGreenCSimple(blue, chrom, 1);
+#endif
     }
 
     // Implementation without SIMD

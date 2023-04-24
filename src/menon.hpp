@@ -27,6 +27,8 @@ namespace menon {
     // For GRBG remove define RGGB in /CMakeLists.txt row 25
     //
     rgb::BitmapRGB Demosaicing(const Bitmap& cfa) {
+
+
         auto start = std::chrono::system_clock::now();
         TIMESTAMP
 
@@ -81,9 +83,9 @@ namespace menon {
         TIMESTAMP
 #endif
 
-        io::WriteGreyscaleToTIFF(green, "green.tiff");
-        io::WriteGreyscaleToTIFF(green_vh.V, "green_v.tiff");
-        io::WriteGreyscaleToTIFF(green_vh.H, "green_h.tiff");
+        //io::WriteGreyscaleToTIFF(green, "green.tiff");
+        //io::WriteGreyscaleToTIFF(green_vh.V, "green_v.tiff");
+        //io::WriteGreyscaleToTIFF(green_vh.H, "green_h.tiff");
         //io::WriteGreyscaleToTIFF(rb.H, "blue.tiff");
         //io::WriteGreyscaleToTIFF(CopyCast16(hpG), "hpg.tiff");
 

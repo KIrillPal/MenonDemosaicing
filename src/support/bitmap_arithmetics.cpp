@@ -1,5 +1,10 @@
 #include <cmath>
+#include <thread>
 #include "bitmap_arithmetics.hpp"
+
+// Allow to execute operations concurrently
+//#define OPS_PARALLEL
+
 
 #if defined(SIMD)
 #include "immintrin.h"
@@ -131,7 +136,14 @@ void SubDiv2(Bitmap& b1, const Bitmap& b2) {
         }                                                                          \
     }
 
-#define SIMD_SHIFTED_OPERATION(PREPARE, IN_CYCLE, IN_REST)                         \
+#ifdef OPS_PARALLEL
+#define SIMD_SHIFTED_OPERATION SIMD_SHIFTED_OPERATION_MULTITHREAD
+#else
+#define SIMD_SHIFTED_OPERATION SIMD_SHIFTED_OPERATION_ONE_THREAD
+#endif
+
+
+#define SIMD_SHIFTED_OPERATION_ONE_THREAD(PREPARE, IN_CYCLE, IN_REST)              \
     {                                                                              \
         size_t h = b1.Height();                                                    \
         size_t w = b1.Width();                                                     \
@@ -158,6 +170,45 @@ void SubDiv2(Bitmap& b1, const Bitmap& b2) {
             /* Update row_pos */                                                   \
             row1_pos += w;                                                         \
             row2_pos += w;                                                         \
+        }                                                                          \
+    }
+
+#define SIMD_SHIFTED_OPERATION_MULTITHREAD(PREPARE, IN_CYCLE, IN_REST)             \
+    {                                                                              \
+        size_t threads = std::thread::hardware_concurrency() >> 1;                 \
+        std::vector<std::thread> parts;                                            \
+        for (size_t i = 0; i < threads; ++i) {                                     \
+            parts.emplace_back([&, i](){                                           \
+                size_t h = b1.Height() * (i + 1) / threads;                        \
+                size_t w = b1.Width();                                             \
+                size_t min_x = std::max(static_cast<int>(b1.Height() * i / threads), -dx); \
+                size_t min_y = std::max(0, -dy);                                   \
+                                                                                   \
+                PREPARE                                                            \
+                                                                                   \
+                size_t row1_pos = min_x * w;                                       \
+                size_t row2_pos = (min_x + dx) * w;                                \
+                /*Just shorter constant*/                                          \
+                constexpr size_t STEP = SIMD_SIZE_ITEMS;                           \
+                /*For each row grab elems by 128b and do some with them*/          \
+                for (size_t x = min_x; x < h && x + dx < h; ++x) {                 \
+                    size_t y = min_y;                                              \
+                    for (; y + STEP <= w && y + dy + STEP <= w; y += STEP) {       \
+                        IN_CYCLE                                                   \
+                    }                                                              \
+                    /* Deal with the rest */                                       \
+                    while (y < w && y + dy < w) {                                  \
+                        IN_REST                                                    \
+                        ++y;                                                       \
+                    }                                                              \
+                    /* Update row_pos */                                           \
+                    row1_pos += w;                                                 \
+                    row2_pos += w;                                                 \
+                }                                                                  \
+            });                                                                    \
+        }                                                                          \
+        for (auto& part : parts) {                                                 \
+            part.join();                                                           \
         }                                                                          \
     }
 

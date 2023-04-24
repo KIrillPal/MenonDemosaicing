@@ -1,15 +1,11 @@
 #include <algorithm>
 #include <array>
 #include <thread>
-#include "../support/bitmap_arithmetics.hpp"
 #include "directional.hpp"
 
 #if defined(SIMD)
 #include <immintrin.h>
 #endif
-
-// define to use fast algorithm of Interpolation
-//#define FAST_VH
 
 #define GET_DIRECTIONAL(bmp, x, y, dir) (dir == HORIZONTAL ? bmp.Get(x, y) : bmp.Get(y, x))
 #define GET_INT_DIRECTIONAL(bmp, x, y, dir) (static_cast<int>(dir == HORIZONTAL ? bmp.Get(x, y) : bmp.Get(y, x)))
@@ -19,7 +15,6 @@ namespace menon {
     //Interpolation variants (only headers):
     Bitmap InterpolateDirectionalSimple(const Bitmap& mosaic, Direction d);
     Bitmap InterpolateDirectionalWithSIMD(const Bitmap& mosaic, Direction d);
-    Bitmap InterpolateDirectionalWithSIMDFast(const Bitmap& cfa32, const Bitmap& cfa32_2, Direction d);
 
     // Interpolates green color in Bayer mosaic by direction d
     Bitmap InterpolateDirectional(const Bitmap& mosaic, Direction d) {
@@ -37,31 +32,16 @@ namespace menon {
         return InterpolateDirectional(mosaic, Direction::HORIZONTAL);
     }
 
-    BitmapVH InterpolateGreenVH(const Bitmap& cfa) {
+    BitmapVH InterpolateGreenVH(const Bitmap& mosaic) {
         BitmapVH result;
-#if defined(PARALLEL)
-#if defined(FAST_VH)
-        Bitmap cfa32 = CopyCast32(cfa);
-        // 2 * cfa32
-        Bitmap cfa32_2 = cfa32;
-        Add(cfa32_2, cfa32_2);
+#ifdef PARALLEL
+        std::thread vertical([&]() {
+            result.V = std::move(InterpolateVertical(mosaic));
+        });
+        std::thread horizontal([&]() {
+            result.H = std::move(InterpolateHorizontal(mosaic));
+        });
 
-        std::thread vertical([&]() {
-            result.V = std::move(
-                    InterpolateDirectionalWithSIMDFast(cfa32, cfa32_2, HORIZONTAL));
-        });
-        std::thread horizontal([&]() {
-            result.H = std::move(
-                    InterpolateDirectionalWithSIMDFast(cfa32, cfa32_2, VERTICAL));
-        });
-#else
-        std::thread vertical([&]() {
-            result.V = std::move(InterpolateVertical(cfa));
-        });
-        std::thread horizontal([&]() {
-            result.H = std::move(InterpolateHorizontal(cfa));
-        });
-#endif
         vertical.join();
         horizontal.join();
 #else
@@ -131,8 +111,8 @@ namespace menon {
                 if (y < kOff || y + kOff >= w) {
                     sum *= static_cast<int>(kFilterSubMatrix[0][kFilterSize - 1]);
                     sum /= kFilterSubMatrix
-                            [y < kOff ? kOff - y : 0] /*first in filter*/
-                            [y + kOff >= w ? kFilterSize - 2 - y - kOff + w : kFilterSize - 1]; /*last*/
+                    [y < kOff ? kOff - y : 0] /*first in filter*/
+                    [y + kOff >= w ? kFilterSize - 2 - y - kOff + w : kFilterSize - 1]; /*last*/
                 }
 
 
@@ -222,8 +202,8 @@ namespace menon {
                 if (y < 2 * OFF || w <= y) {
                     sum *= kFilterSubMatrix[0][kFilterSize - 1];
                     sum /= kFilterSubMatrix
-                            [y < 2*OFF ? kFilterSize - y - 1 : 0]  /*first in filter*/
-                            [y >= w ? kFilterSize - y - 2 + w : kFilterSize - 1]; /*last*/
+                    [y < 2*OFF ? kFilterSize - y - 1 : 0]  /*first in filter*/
+                    [y >= w ? kFilterSize - y - 2 + w : kFilterSize - 1]; /*last*/
                 }
 
 
@@ -243,67 +223,6 @@ namespace menon {
         }
         return dest;
     }
-
-    inline void OffsetBrightness(
-            Bitmap& field,
-            size_t x, size_t y,
-            size_t h, size_t w,
-            size_t filter_size,
-            size_t off)
-    {
-        int& color = field.Get<int>(x, y);
-        color *= kFilterSubMatrix[0][filter_size - 1];
-        color /= kFilterSubMatrix
-            [y < 2*off ? filter_size - y - 1 : 0]  /*first in filter*/
-            [y >= w ? filter_size - y - 2 + w : filter_size - 1]; /*last*/
-    }
-
-    // The implementation with SIMD but using SIMD in bitmap_arithmetics
-    // BE CAREFUL: filter length must not exceed SIMD_ITEMS_SIZE, it's SIMD_BITS_SIZE bits
-    Bitmap InterpolateDirectionalWithSIMDFast(const Bitmap& cfa32, const Bitmap& cfa32_2, Direction d) {
-        size_t w = cfa32.Width();
-        size_t h = cfa32.Height();
-
-        Bitmap filter = cfa32_2;
-        if (d == Direction::HORIZONTAL) {
-            AddShifted(filter, cfa32_2, 0,  1);
-            SubShifted(filter, cfa32  , 0,  2);
-            AddShifted(filter, cfa32_2, 0, -1);
-            SubShifted(filter, cfa32  , 0, -2);
-        } else {
-            AddShifted(filter, cfa32_2,  1, 0);
-            SubShifted(filter, cfa32  ,  2, 0);
-            AddShifted(filter, cfa32_2, -1, 0);
-            SubShifted(filter, cfa32  , -2, 0);
-        }
-
-        // (FIR Filter proposed in the article) * 4
-        // [-1, 2, 2, 2, -1];
-        // Let's apply it like sequence of sums and subs
-       constexpr size_t kFilterSize = 5;
-        // OFF - filter offset. Offset from begin of filter to the result pixel
-        constexpr size_t OFF = kFilterSize >> 1;
-
-        // Size of bound when filter is applied partially
-        // The brightness of such pixels needs to be adjusted
-        size_t x_size = std::min((d == HORIZONTAL ? h : OFF), (h + 1) >> 1);
-        size_t y_size = std::min((d == HORIZONTAL ? OFF : w), (w + 1) >> 1);
-        for (size_t x = 0; x < x_size; ++x) {
-            for (size_t y = 0; y < x_size; ++y) {
-                OffsetBrightness(filter, x, y, h, w, kFilterSize, OFF);
-                if (d == Direction::HORIZONTAL) {
-                    OffsetBrightness(filter, x, w - y - 1, h, w, kFilterSize, OFF);
-                } else {
-                    OffsetBrightness(filter, h - x - 1, y, h, w, kFilterSize, OFF);
-                }
-            }
-        }
-
-        // finally divide by 4 (because we chose filter * 4)
-        //Shift(filter, 2);
-        return CopyCast16(filter);
-    }
 #endif
 
 } // namespace menon
-
